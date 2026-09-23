@@ -13,6 +13,7 @@ const pointSchema = new mongoose.Schema(
       validate: {
         validator: (coordinates) => {
           return (
+            Array.isArray(coordinates) &&
             coordinates.length === 2 &&
             coordinates[0] >= -180 &&
             coordinates[0] <= 180 &&
@@ -20,8 +21,7 @@ const pointSchema = new mongoose.Schema(
             coordinates[1] <= 90
           );
         },
-        message:
-          "Coordinates must be [longitude, latitude] with valid values",
+        message: "Coordinates must be [longitude, latitude] with valid values",
       },
     },
   },
