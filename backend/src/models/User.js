@@ -1,6 +1,37 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
+const pointSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator: (coordinates) => {
+          return (
+            coordinates.length === 2 &&
+            coordinates[0] >= -180 &&
+            coordinates[0] <= 180 &&
+            coordinates[1] >= -90 &&
+            coordinates[1] <= 90
+          );
+        },
+        message:
+          "Coordinates must be [longitude, latitude] with valid values",
+      },
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+const userSchema = new mongoose.Schema(
+  {
     name: {
       type: String,
       required: true,
@@ -8,6 +39,7 @@ const userSchema = new mongoose.Schema({
       minlength: 2,
       maxlength: 80,
     },
+
     email: {
       type: String,
       required: true,
@@ -16,58 +48,46 @@ const userSchema = new mongoose.Schema({
       trim: true,
       index: true,
     },
+
     passwordHash: {
       type: String,
       required: true,
       select: false,
     },
+
     profileImage: {
       type: String,
       default: "",
     },
+
     bio: {
       type: String,
       default: "",
       maxlength: 500,
     },
+
     dateOfBirth: {
       type: Date,
       required: true,
     },
+
     interests: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category",
       },
     ],
+
     location: {
-      type: {
-        type: String,
-        enum: ["Point"],
-      },
-      coordinates: {
-        type: [Number],
-        validate: {
-          validator: (coordinates) => {
-            return (
-              Array.isArray(coordinates) &&
-              coordinates.length === 2 &&
-              coordinates[0] >= -180 &&
-              coordinates[0] <= 180 &&
-              coordinates[1] >= -90 &&
-              coordinates[1] <= 90
-            );
-          },
-          message:
-            "Location coordinates must be [longitude, latitude] with valid values",
-        },
-      },
-      default: undefined,
+      type: pointSchema,
+      required: false,
     },
+
     locationVisible: {
       type: Boolean,
       default: false,
     },
+
     role: {
       type: String,
       enum: ["user", "admin"],
@@ -78,18 +98,22 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     },
+
     isBlocked: {
       type: Boolean,
       default: false,
     },
   },
-  {timestamps: true,}
+  {
+    timestamps: true,
+  }
 );
 
 userSchema.index({ location: "2dsphere" });
 
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
+
   delete user.passwordHash;
   delete user.__v;
 
